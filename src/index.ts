@@ -1,9 +1,7 @@
 import './styles.css';
+import { Startup } from './Startup';
+import 'normalize.css';
+import appConfig from '../config/app-config';
 
-class A {
-    public static main() {
-        console.log(123);
-    }
-}
-
-A.main();
+const App = new Startup(appConfig);
+App.main();
