@@ -1,3 +1,5 @@
 export enum InputEventType {
-    DragScroll
+  DragScroll,
+  ZoomIn,
+  ZoomOut,
 }

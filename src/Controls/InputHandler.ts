@@ -1,123 +1,70 @@
-import { Direction } from '../Render/Direction';
 import { ScrollEvent } from './ScrollEvent';
-import { IUserEvent } from './IUserEvent';
-import controls from '../../config/controls';
+import { UserEvent } from './UserEvent';
 import { DragScrollEvent } from './DragScrollEvent';
-import { InputEventType } from './InputEventType';
+import { MouseControlKeys } from './MouseControlKeys';
+import { ZoomEvent } from './ZoomEvent';
+import { InputState } from './InputState';
 
 export class InputHandler {
   private canvas: HTMLCanvasElement;
   private rect: ClientRect;
 
-  private w: number;
-  private h: number;
-
-  // how close to the edge to start scrolling
-  private readonly scrollZone = 50;
-
-  private mouseX: number;
-  private mouseY: number;
-
   private dragBeginX: number;
   private dragBeginY: number;
-  private dragging = false;
-  private dragBtn: number;
 
-  private userEvents: Array<IUserEvent> = [];
+  private inputState: InputState = new InputState;
+  private readonly singleFrameKeys = [MouseControlKeys.WheelDown, MouseControlKeys.WheelUp];
+
+  private readonly userEvents: Array<UserEvent> = [
+    new DragScrollEvent(this.inputState),
+    new ScrollEvent(this.inputState),
+    new ZoomEvent(this.inputState),
+  ];
 
   public setCanvas(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
 
     canvas.addEventListener('mousemove', (event: MouseEvent) => {
-      this.mouseX = event.clientX - this.rect.left;
-      this.mouseY = event.clientY - this.rect.top;
+      this.inputState.mouseX = event.clientX - this.rect.left;
+      this.inputState.mouseY = event.clientY - this.rect.top;
     });
 
     canvas.addEventListener('mouseup', (event: MouseEvent) => {
-      this.dragging = false;
+      this.inputState.dragging = false;
+      this.inputState.pressedKeys = this.inputState.pressedKeys.filter(key => key !== event.button);
     });
 
     canvas.addEventListener('mousedown', (event: MouseEvent) => {
       event.preventDefault();
-      this.dragBeginX = this.mouseX;
-      this.dragBeginY = this.mouseY;
-      this.dragging = true;
-      this.dragBtn = event.button;
+      this.dragBeginX = this.inputState.mouseX;
+      this.dragBeginY = this.inputState.mouseY;
+      this.inputState.dragging = true;
+      this.inputState.pressedKeys.push(event.button);
+    });
+
+    canvas.addEventListener('wheel', (event: WheelEvent) => {
+      event.preventDefault();
+      this.inputState.pressedKeys.push(event.wheelDelta > 0 ? MouseControlKeys.WheelUp : MouseControlKeys.WheelDown);
     });
   }
 
-  public popUserEvents(): Array<IUserEvent> {
-    const events = [...this.userEvents, ...this.getMousePosEvents()];
-    this.userEvents = [];
-    return events;
+  public getUserEvents(): Array<UserEvent> {
+    if (this.inputState.dragging) {
+      this.inputState.dragX = this.dragBeginX - this.inputState.mouseX;
+      this.inputState.dragY = this.dragBeginY - this.inputState.mouseY;
+      this.dragBeginX = this.inputState.mouseX;
+      this.dragBeginY = this.inputState.mouseY;
+    }
+    return this.userEvents;
+  }
+
+  public update() {
+    this.inputState.pressedKeys = this.inputState.pressedKeys.filter(key => !this.singleFrameKeys.includes(key));
   }
 
   public resized(w: number, h: number) {
-    this.w = w;
-    this.h = h;
+    this.inputState.w = w;
+    this.inputState.h = h;
     this.rect = this.canvas.getBoundingClientRect();
-  }
-
-  private getMousePosEvents(): Array<IUserEvent> {
-    const events = [];
-    let dir: Direction;
-    if (this.isUpScroll()) {
-      if (this.isLeftScroll()) {
-        dir = Direction.UpLeft;
-      } else if (this.isRightScroll()) {
-        dir = Direction.UpRight;
-      } else {
-        dir = Direction.Up;
-      }
-    } else if (this.isDownScroll()) {
-      if (this.isLeftScroll()) {
-        dir = Direction.DownLeft;
-      } else if (this.isRightScroll()) {
-        dir = Direction.DownRight;
-      } else {
-        dir = Direction.Down;
-      }
-    } else if (this.isLeftScroll()) {
-      dir = Direction.Left;
-    } else if (this.isRightScroll()) {
-      dir = Direction.Right;
-    }
-
-    if (this.dragging) {
-      for (const [key, value] of Object.entries(controls)) {
-        if (String(this.dragBtn) === value.key.toString()) {
-          switch (key) {
-            case InputEventType.DragScroll.toString():
-              events.push(
-                new DragScrollEvent(
-                  this.dragBeginX - this.mouseX,
-                  this.dragBeginY - this.mouseY
-                )
-              );
-          }
-        }
-      }
-      this.dragBeginX = this.mouseX;
-      this.dragBeginY = this.mouseY;
-    } else if (dir !== undefined) {
-      events.push(new ScrollEvent(dir));
-    }
-    return events;
-  }
-
-  private isLeftScroll() {
-    return this.mouseX < this.scrollZone;
-  }
-
-  private isRightScroll() {
-    return this.w - this.scrollZone < this.mouseX;
-  }
-
-  private isUpScroll() {
-    return this.mouseY < this.scrollZone;
-  }
-
-  private isDownScroll() {
-    return this.h - this.scrollZone < this.mouseY;
   }
 }

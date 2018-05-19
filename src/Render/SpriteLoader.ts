@@ -4,7 +4,9 @@ import { TileType } from '../Grid/TileType';
 
 export class SpriteLoader {
   public readonly sprites = new Map<TileType, Sprite>();
-  constructor() {}
+
+  constructor() {
+  }
 
   public load(): Promise<void> {
     return new Promise(resolve => {

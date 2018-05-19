@@ -19,12 +19,12 @@ export class Startup {
   public main() {
     this.tickDuration = 1000 / this.config.calculationalFps;
     this.sprites = new SpriteLoader();
-    const input = new InputHandler()
+    const input = new InputHandler();
     this.state = new State(this.sprites, input);
     this.renderer = new Renderer(this.state);
-    
+
     this.canvas = new Canvas(
-      this.config.cavasId,
+      this.config.canvasId,
       this.sprites,
       input,
       (w, h) => {
@@ -45,8 +45,8 @@ export class Startup {
       numTicks = Math.floor((timestamp - this.lastTick) / this.tickDuration);
     }
     this.state.update(numTicks);
-    this.renderer.render(this.state);
-    if(numTicks) {
+    this.renderer.render();
+    if (numTicks) {
       this.lastTick = timestamp;
     }
     requestAnimationFrame(this.frame);

@@ -13,7 +13,8 @@ export class Viewport {
   private mapHeight: number;
   private readonly scrollSpeed = appConfig.scrollSpeed;
 
-  constructor(private mapTileWidth: number, private mapTileHeight: number) {}
+  constructor(private mapTileWidth: number, private mapTileHeight: number) {
+  }
 
   public init(w: number, h: number, scale: number = appConfig.defaultScale) {
     this.w = w;
@@ -22,77 +23,20 @@ export class Viewport {
     this.calculateDimensions();
   }
 
-  private calculateDimensions() {
-    this.mapWidth = this.mapTileWidth * this.scale * appConfig.spriteSize;
-    this.mapHeight = this.mapTileHeight * this.scale * appConfig.spriteSize;
-  }
-
   public scroll(direction: Direction) {
-    switch (direction) {
-      case Direction.Down:
-        this.down();
-        break;
-      case Direction.Up:
-        this.up();
-        break;
-      case Direction.Right:
-        this.right();
-        break;
-      case Direction.Left:
-        this.left();
-        break;
-      case Direction.UpLeft:
-        this.up();
-        this.left();
-        break;
-      case Direction.UpRight:
-        this.up();
-        this.right();
-        break;
-      case Direction.DownLeft:
-        this.left();
-        this.down();
-        break;
-      case Direction.DownRight:
-        this.down();
-        this.right();
-        break;
+    if (direction.up) {
+      this.up();
+    }
+    if (direction.down) {
+      this.down();
+    }
+    if (direction.right) {
+      this.right();
+    }
+    if (direction.left) {
+      this.left();
     }
     this.normalizePos();
-  }
-
-  private right() {
-    this.posX += this.scrollSpeed;
-  }
-
-  private left() {
-    this.posX -= this.scrollSpeed;
-  }
-
-  private up() {
-    this.posY -= this.scrollSpeed;
-  }
-
-  private down() {
-    this.posY += this.scrollSpeed;
-  }
-
-  private normalizePos() {
-    this.posY = Math.min(this.posY, this.mapHeight - this.h);
-    this.posY = Math.max(this.posY, 0);
-    this.posX = Math.max(this.posX, 0);
-    this.posX = Math.min(this.posX, this.mapWidth - this.w);
-  }
-
-  public contains(x: number, y: number) {
-    const scaledX = x * this.scale;
-    const scaledY = y * this.scale;
-    return (
-      scaledX <= this.posX + this.w &&
-      this.posX <= scaledX + appConfig.spriteSize &&
-      scaledY <= this.posY + this.h &&
-      this.posY <= scaledY + appConfig.spriteSize
-    );
   }
 
   public normalize(renderable: Renderable): Renderable {
@@ -118,5 +62,39 @@ export class Viewport {
     const maxY = Math.ceil((this.posY + this.h) / scaledSpriteSize);
 
     return {minX, minY, maxX, maxY};
+  }
+
+  public setScale(scale: number) {
+    this.scale = scale;
+  }
+
+  public getScale() {
+    return this.scale;
+  }
+
+  private calculateDimensions() {
+    this.mapWidth = this.mapTileWidth * this.scale * appConfig.spriteSize;
+    this.mapHeight = this.mapTileHeight * this.scale * appConfig.spriteSize;
+  }
+
+  private right() {
+    this.posX += this.scrollSpeed;
+  }
+
+  private left() {
+    this.posX -= this.scrollSpeed;
+  }
+
+  private up() {
+    this.posY -= this.scrollSpeed;
+  }
+
+  private down() {
+    this.posY += this.scrollSpeed;
+  }
+
+  private normalizePos() {
+    this.posY = Math.max(Math.min(this.posY, this.mapHeight - this.h), 0);
+    this.posX = Math.min(Math.max(this.posX, 0), this.mapWidth - this.w);
   }
 }

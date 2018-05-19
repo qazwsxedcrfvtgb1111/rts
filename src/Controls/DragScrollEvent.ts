@@ -1,11 +1,13 @@
-import { Direction } from '../Render/Direction';
-import { IUserEvent } from './IUserEvent';
+import { UserEvent } from './UserEvent';
 import { State } from '../State';
+import controls from '../../config/controls';
+import { InputEventType } from './InputEventType';
 
-export class DragScrollEvent implements IUserEvent {
-  public constructor(private deltaX: number, private deltaY: number) {}
+export class DragScrollEvent extends UserEvent {
 
-  apply(state: State) {
-    state.getViewport().deltaScroll(this.deltaX, this.deltaY);
+  public apply(state: State) {
+    if (this.inputState.pressedKeys.includes(controls[InputEventType.DragScroll].key)) {
+      state.getViewport().deltaScroll(this.inputState.dragX, this.inputState.dragY);
+    }
   }
 }

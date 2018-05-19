@@ -1,10 +1,6 @@
-export enum Direction {
-  Up,
-  Down,
-  Left,
-  Right,
-  UpRight,
-  UpLeft,
-  DownRight,
-  DownLeft
+export interface Direction {
+  up?: boolean,
+  down?: boolean,
+  left?: boolean,
+  right?: boolean
 }

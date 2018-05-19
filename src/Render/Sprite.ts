@@ -2,10 +2,9 @@ export class Sprite {
   private framesInSprite: number;
   private loaded = false;
   private dimension: number;
-  public constructor(
-    private image: HTMLImageElement,
-    private framesPerAnimation: number
-  ) {
+
+  public constructor(private image: HTMLImageElement,
+                     private framesPerAnimation: number) {
   }
 
   public gotLoaded() {
